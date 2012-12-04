@@ -19,8 +19,15 @@ require 'json'
 # TRELLO_BOARD_ID : the trellobot looks at only one board and the lists on it, put its id here
 # TRELLO_BOT_QUIT_CODE : passcode to cause trellobot to quit - defaults to none
 # TRELLO_BOT_CHANNEL : the name of the channel you want trellobot to live on
+# TRELLO_BOT_CHANNEL_KEY : the password of the channel you want trellobot to live on. Optional
 # TRELLO_BOT_NAME : the name for the bot, defaults to 'trellobot'
 # TRELLO_BOT_SERVER : the server to connect to, defaults to 'irc.freenode.net'
+# TRELLO_SSL : if ssl is required set this variable to "true" if not, do not set it at all. Optional
+# TRELLO_SSL_PORT : if ssl is used set this variable to the port number that should be used. Optional
+# TRELLO_ADD_CARDS_LIST : all cards are added at creation time to a default list. Set this variable to the
+# name of that list. If not setted up, it will default to "To Do", and if a list with that name doesn't exist
+# there will be features that will not work (Card's related ones). Optional
+
 
 
 # DONE [dmn]:
