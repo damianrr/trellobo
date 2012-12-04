@@ -149,6 +149,20 @@ bot = Cinch::Bot.new do
         card.add_member(member)
         m.reply "Added \"#{member.full_name}\" to card \"#{card.name}\"."
       end
+      when /^card by user \w+/
+      username = searchfor.match(/^card by user (\w+)/)[1]
+      cards = []
+      $board.cards.each do |card|
+        members = card.members.collect { |mem| mem.username }
+        if members.include? username
+          cards << card
+        end
+      end
+      inx = 1
+      cards.each do |c|
+        m.reply "  ->  #{inx.to_s}. #{c.name} (id: #{short_id(c)}) from list: #{c.list.name}"
+        inx += 1
+      end
       when /lists/
         $board.lists.each { |l|
           m.reply "  ->  #{l.name} (id: #{l.id})"
