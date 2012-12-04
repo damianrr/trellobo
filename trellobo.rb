@@ -130,6 +130,13 @@ bot = Cinch::Bot.new do
       card = Trello::Card.find(card_id.to_s)
       card.add_comment comment
       m.reply "Added \"#{comment}\" comment to \"#{card.name}\" card"
+      when /^card \d+ move to \w+/
+      m.reply "Moving card ... "
+      regex = searchfor.match(/^card (\d+) move to (\w+)/)
+      card = Trello::Card.find(given_short_id_return_long_id(regex[1].to_s))
+      list = Trello::List.find(regex[2].to_s)
+      card.list = list
+      m.reply "Moved card \"#{card.name}\" to list \"#{list.name}\"."
       when /lists/
         $board.lists.each { |l|
           m.reply "  ->  #{l.name} (id: #{l.id})"
