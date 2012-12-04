@@ -117,7 +117,8 @@ bot = Cinch::Bot.new do
       if $add_cards_list.nil?
         m.reply "Can't add card. It wasn't found any list named: #{ENV['TRELLO_ADD_CARDS_LIST']}."
       else
-        name = searchfor.strip.match(/^create card (.+)$/)[1]
+        m.reply "Creating card ... "
+        name = searchfor.strip.match(/^card add (.+)$/)[1]
         card = Trello::Card.create(:name => name, :list_id => $add_cards_list.id)
         m.reply "Created card #{card.name} with id: #{short_id(card)}."
       end
