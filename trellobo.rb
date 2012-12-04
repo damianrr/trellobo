@@ -22,6 +22,19 @@ require 'json'
 # TRELLO_BOT_NAME : the name for the bot, defaults to 'trellobot'
 # TRELLO_BOT_SERVER : the server to connect to, defaults to 'irc.freenode.net'
 
+
+# DONE [dmn]:
+# trello: card adding stuff to cp eso crearia ese card y te daria un id
+# trello: card <id> comment "this is a comment on card <id>"
+# trello: card <id> move to xx
+# trello: card <id> by user xx (devuelve todas las cards a las que un usario esta asignado)
+# trello: card <id> add member "maykel" (adiciona maykel como miembro)
+
+# TODO [dmn]:
+# trello: card <id> view xx (muestra todo el contenido de un card mediante el envio un correo formateado)
+# validar bien todos los inputs para en caso de que los ids no existan, etc
+
+
 $board = nil
 $add_cards_list = nil
 
