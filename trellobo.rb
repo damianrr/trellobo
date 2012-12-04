@@ -122,6 +122,14 @@ bot = Cinch::Bot.new do
         card = Trello::Card.create(:name => name, :list_id => $add_cards_list.id)
         m.reply "Created card #{card.name} with id: #{short_id(card)}."
       end
+      when /^card \d+ comment/
+      m.reply "Commenting on card ... "
+      card_regex = searchfor.match(/^card (\d+) comment (.+)/)
+      card_id = given_short_id_return_long_id(card_regex[1])
+      comment = card_regex[2]
+      card = Trello::Card.find(card_id.to_s)
+      card.add_comment comment
+      m.reply "Added \"#{comment}\" comment to \"#{card.name}\" card"
       when /lists/
         $board.lists.each { |l|
           m.reply "  ->  #{l.name} (id: #{l.id})"
