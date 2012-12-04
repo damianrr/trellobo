@@ -11,7 +11,7 @@ require 'json'
 # You'll be told to give some key to the app, this is what you want to put in the TRELLO_API_ACCESS_TOKEN_KEY below.
 #
 # there are 5 environment variables that must be set for the trellobot to behave
-# the way he is supposed to - 
+# the way he is supposed to -
 #
 # TRELLO_API_KEY : your Trello API developer key
 # TRELLO_API_SECRET : your Trello API developer secret
@@ -24,6 +24,8 @@ require 'json'
 
 
 # DONE [dmn]:
+# Improved support for ssl and custom ports
+# Improved support for channels with passwords
 # trello: card adding stuff to cp eso crearia ese card y te daria un id
 # trello: card <id> comment "this is a comment on card <id>"
 # trello: card <id> move to xx
@@ -205,13 +207,13 @@ bot = Cinch::Bot.new do
     end
     end
   end
-  
+
   # if trellobot loses his marbles, it's easy to disconnect him from the server
-  # note that if you are doing a PaaS deploy, he may respawn depending on what 
+  # note that if you are doing a PaaS deploy, he may respawn depending on what
   # the particular hosting env is (e.g. Heroku will start him up again)
   on :private, /^quit(\s*)(\w*)/ do |m, blank, code|
     bot.quit if ENV['TRELLO_BOT_QUIT_CODE'].eql?(code)
-     
+
     if code.empty?
       m.reply "There is a quit code required for this bot, sorry."
     else
