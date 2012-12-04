@@ -122,8 +122,8 @@ bot = Cinch::Bot.new do
         m.reply "Created card #{card.name} with id: #{short_id(card)}."
       end
       when /lists/
-        $board.lists.each { |l| 
-          m.reply "  ->  #{l.name}"
+        $board.lists.each { |l|
+          m.reply "  ->  #{l.name} (id: #{l.id})"
         }
       when /help/
       when /\?/
