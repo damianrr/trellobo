@@ -32,6 +32,9 @@ Trello::Authorization.const_set :AuthPolicy, OAuthPolicy
 OAuthPolicy.consumer_credential = OAuthCredential.new ENV['TRELLO_API_KEY'], ENV['TRELLO_API_SECRET']
 OAuthPolicy.token = OAuthCredential.new ENV['TRELLO_API_ACCESS_TOKEN_KEY'], nil
 
+def short_id(card)
+  card.url.match(/\/(\d+)$/)[1]
+end
 def sync_board
   return $board.refresh! if $board
   $board = Trello::Board.find(ENV['TRELLO_BOARD_ID'])
@@ -86,6 +89,14 @@ bot = Cinch::Bot.new do
     case searchfor
       when /debug/
       debugger
+      when /^create card/
+      if $add_cards_list.nil?
+        m.reply "Can't add card. It wasn't found any list named: #{ENV['TRELLO_ADD_CARDS_LIST']}."
+      else
+        name = searchfor.strip.match(/^create card (.+)$/)[1]
+        card = Trello::Card.create(:name => name, :list_id => $add_cards_list.id)
+        m.reply "Created card #{card.name} with id: #{short_id(card)}."
+      end
       when /lists/
         $board.lists.each { |l| 
           m.reply "  ->  #{l.name}"
