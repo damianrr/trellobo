@@ -108,31 +108,28 @@ bot = Cinch::Bot.new do
         sync_board
         m.reply "Ok, synced the board, #{m.user.nick}."
       else
-        if searchfor.length > 0
-          # trellobot presumes you know what you are doing and will attempt
-          # to retrieve cards using the text you put in the message to him
-          # at least the comparison is not case sensitive
-          list = $board.lists.detect { |l| l.name.casecmp(searchfor) == 0 }
-          if list.nil?
-            m.reply "There's no list called <#{searchfor}> on the board, #{m.user.nick}. Sorry."
-          else
-            cards = list.cards
-            if cards.count == 0
-              m.reply "Nothing doing on that list today, #{m.user.nick}."
-            else
-              ess = (cards.count == 1) ? "" : "s"
-              m.reply "I have #{cards.count} card#{ess} today"
-              inx = 1
-              cards.each { |c|
-                m.reply "  ->  #{inx.to_s}. #{c.name}"
-                inx += 1
-              }
-            end
-          end
-        else
-          say_help(m)
-        end
-    end 
+    if searchfor.length > 0
+      # trellobot presumes you know what you are doing and will attempt
+      # to retrieve cards using the text you put in the message to him
+      # at least the comparison is not case sensitive
+      list = $board.lists.detect { |l| l.name.casecmp(searchfor) == 0 }
+      if list.nil?
+    m.reply "There's no list called <#{searchfor}> on the board, #{m.user.nick}. Sorry."
+      else
+    cards = list.cards
+    if cards.count == 0
+      m.reply "Nothing doing on that list today, #{m.user.nick}."
+    else
+      ess = (cards.count == 1) ? "" : "s"
+      m.reply "I have #{cards.count} card#{ess} today"
+      inx = 1
+      cards.each { |c| m.reply "  ->  #{inx.to_s}. #{c.name} (id: #{short_id(c)})"; inx += 1 }
+    end
+      end
+    else
+      say_help(m)
+    end
+    end
   end
   
   # if trellobot loses his marbles, it's easy to disconnect him from the server
