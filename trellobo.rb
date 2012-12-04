@@ -23,6 +23,7 @@ require 'json'
 # TRELLO_BOT_SERVER : the server to connect to, defaults to 'irc.freenode.net'
 
 $board = nil
+$add_cards_list = nil
 
 include Trello
 include Trello::Authorization
@@ -34,6 +35,7 @@ OAuthPolicy.token = OAuthCredential.new ENV['TRELLO_API_ACCESS_TOKEN_KEY'], nil
 def sync_board
   return $board.refresh! if $board
   $board = Trello::Board.find(ENV['TRELLO_BOARD_ID'])
+  $add_cards_list = $board.lists.detect { |l| l.name.casecmp(ENV['TRELLO_ADD_CARDS_LIST']) == 0 }
 end
 
 def say_help(msg)
@@ -51,6 +53,7 @@ bot = Cinch::Bot.new do
     ENV['TRELLO_BOT_QUIT_CODE'] ||= ""
     ENV['TRELLO_BOT_NAME'] ||= "trellobot"
     ENV['TRELLO_BOT_SERVER'] ||= "irc.freenode.net"
+    ENV['TRELLO_ADD_CARDS_LIST'] ||= "To Do"
 
     c.server = ENV['TRELLO_BOT_SERVER']
     c.nick = ENV['TRELLO_BOT_NAME']
@@ -82,7 +85,7 @@ bot = Cinch::Bot.new do
     
     case searchfor
       when /debug/
-        debugger
+      debugger
       when /lists/
         $board.lists.each { |l| 
           m.reply "  ->  #{l.name}"
