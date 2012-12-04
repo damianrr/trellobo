@@ -102,18 +102,18 @@ bot = Cinch::Bot.new do
     # if trellobot can't get thru to the board, then send the human to the human url
     sync_board unless $board
     unless $board
-      m.reply "I can't seem to get the list of ideas from Trello, sorry. Try here: https://trello.com/board/#{ENV['TRELLO_BOARD_ID']}" 
+      m.reply "I can't seem to get the list of ideas from Trello, sorry. Try here: https://trello.com/board/#{ENV['TRELLO_BOARD_ID']}"
       bot.halt
     end
-    
+
     # trellobot: what up?  <- The bit we are interested in is past the ':'
     parts = m.message.split(':',2)
     searchfor = parts[1].strip.downcase
-    
+
     case searchfor
       when /debug/
       debugger
-      when /^create card/
+      when /^card add/
       if $add_cards_list.nil?
         m.reply "Can't add card. It wasn't found any list named: #{ENV['TRELLO_ADD_CARDS_LIST']}."
       else
