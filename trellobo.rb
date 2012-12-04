@@ -137,6 +137,18 @@ bot = Cinch::Bot.new do
       list = Trello::List.find(regex[2].to_s)
       card.list = list
       m.reply "Moved card \"#{card.name}\" to list \"#{list.name}\"."
+      when /^card \d+ add member \w+/
+      m.reply "Adding member to card ... "
+      regex = searchfor.match(/^card (\d+) add member (\w+)/)
+      card = Trello::Card.find(given_short_id_return_long_id(regex[1].to_s))
+      membs = card.members.collect {|m| m.username}
+      member = Trello::Member.find(regex[2])
+      if membs.include? regex[2]
+        m.reply "#{member.full_name} is already assigned to card \"#{card.name}\"."
+      else
+        card.add_member(member)
+        m.reply "Added \"#{member.full_name}\" to card \"#{card.name}\"."
+      end
       when /lists/
         $board.lists.each { |l|
           m.reply "  ->  #{l.name} (id: #{l.id})"
