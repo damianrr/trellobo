@@ -25,23 +25,36 @@ require 'json'
 # TRELLO_SSL : if ssl is required set this variable to "true" if not, do not set it at all. Optional
 # TRELLO_SSL_PORT : if ssl is used set this variable to the port number that should be used. Optional
 # TRELLO_ADD_CARDS_LIST : all cards are added at creation time to a default list. Set this variable to the
+# TRELLO_MAIL_ADDRESS : address of the mail server used to send the cards
+# TRELLO_MAIL_PORT : port of the mail server used to send the cards
+# TRELLO_MAIL_AUTHENTICATION : type of authentication of the mail server used to send the cards
+# TRELLO_MAIL_USERNAME : username in the mail server used to send the cards
+# TRELLO_MAIL_PASSWORD : password for the username in the mail server used to send the cards
+# TRELLO_MAIL_ENABLE_STARTTLS_AUTO : set tu true if the mail server uses tls, false otherwise
+
+
 # name of that list. If not setted up, it will default to "To Do", and if a list with that name doesn't exist
 # there will be features that will not work (Card's related ones). Optional
 
 
 
+# DONE [moya]:
+# Added support for ssl and custom ports
+# Added support for channels with passwords
+# Fixed bug on trello bot addressing
 # DONE [dmn]:
 # Improved support for ssl and custom ports
 # Improved support for channels with passwords
-# trello: card adding stuff to cp eso crearia ese card y te daria un id
-# trello: card <id> comment "this is a comment on card <id>"
-# trello: card <id> move to xx
-# trello: card <id> by user xx (devuelve todas las cards a las que un usario esta asignado)
-# trello: card <id> add member "maykel" (adiciona maykel como miembro)
+# trello: card adding feature x
+# trello: card <id> comment this is a comment on card <id>
+# trello: card <id> move to Doing
+# trello: card <id> add member joe
+# trello: card <id> by user david (devuelve todas las cards a las que un usario esta asignado)
+# trello: card <id> view joe@email.com (muestra todo el contenido de un card mediante el envio un correo formateado)
 
 # TODO [dmn]:
-# trello: card <id> view xx (muestra todo el contenido de un card mediante el envio un correo formateado)
-# validar bien todos los inputs para en caso de que los ids no existan, etc
+# Crear un template html con la informacion importante del card
+# Parametrizar la configuracion del envio de correos
 
 
 $board = nil
@@ -171,6 +184,36 @@ bot = Cinch::Bot.new do
       cards.each do |c|
         m.reply "  ->  #{inx.to_s}. #{c.name} (id: #{short_id(c)}) from list: #{c.list.name}"
         inx += 1
+      end
+      when /^card \d+ view (.+)/
+      m.reply "Sending mail with card content ... "
+      regex = searchfor.match(/^card (\d+) view (.+)/)
+      card_id = given_short_id_return_long_id(regex[1].to_s)
+      if card_id.count == 0
+        m.reply "Couldn't be found any card with id: #{regex[1]}"
+      elsif card_id.count > 1
+        m.reply "There are #{list.count} cards with id: #{regex[1]}. Don't know what to do ... aborting"
+      else
+        card = Trello::Card.find(card_id[0])
+        msg_err = nil
+        begin
+          validate_mail(regex[2])
+        rescue => e
+          msg_err = e.message
+        end
+        if msg_err.nil?
+          begin
+            email = CardMailer.send_card(regex[2], card)
+            email.deliver
+          rescue => e
+            m.reply e.message
+            m.reply "An error ocurred sending the mail. Sorry for the inconvenience."
+            break
+          end
+          m.reply "Mailed the card \"#{card.name}\" to #{regex[2]}"
+        else
+          m.reply msg_err
+        end
       end
       when /lists/
         $board.lists.each { |l|
