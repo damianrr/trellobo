@@ -2,6 +2,7 @@ require 'cinch'
 require 'trello'
 require 'json'
 require 'resolv'
+require_relative './mailer.rb'
 
 # You will need an access token to use ruby-trello 0.3.0 or higher, which trellobo depends on. To
 # get it, you'll need to go to this URL:
@@ -74,11 +75,13 @@ end
 
 def given_short_id_return_long_id(short_id)
   long_ids = $board.cards.collect { |c| c.id if c.url.match(/\/(\d+)$/)[1] == short_id.to_s}
-  long_ids = long_ids.delete_if {|e| e.nil?}
-  if long_ids.count == 1
-    return long_ids.first
-  else
-    raise RuntimeError "Several long ids found for #{short_id}"
+  long_ids.delete_if {|e| e.nil?}
+end
+
+def get_list_by_name(name)
+  $board.lists.find_all {|l| l.name.casecmp(name.to_s) == 0}
+end
+
 def validate_mail(email)
   unless email.blank?
     unless email =~ /^[a-zA-Z][\w\.-]*[a-zA-Z0-9]@[a-zA-Z0-9][\w\.-]*[a-zA-Z0-9]\.[a-zA-Z][a-zA-Z\.]*[a-zA-Z]$/
@@ -96,6 +99,7 @@ def validate_email_domain(email)
   end
   @mx.size > 0 ? true : false
 end
+
 def sync_board
   return $board.refresh! if $board
   $board = Trello::Board.find(ENV['TRELLO_BOARD_ID'])
@@ -163,28 +167,65 @@ bot = Cinch::Bot.new do
       m.reply "Commenting on card ... "
       card_regex = searchfor.match(/^card (\d+) comment (.+)/)
       card_id = given_short_id_return_long_id(card_regex[1])
-      comment = card_regex[2]
-      card = Trello::Card.find(card_id.to_s)
-      card.add_comment comment
-      m.reply "Added \"#{comment}\" comment to \"#{card.name}\" card"
+      if card_id.count == 0
+        m.reply "Couldn't be found any card with id: #{card_regex[1]}"
+      elsif card_id.count > 1
+        m.reply "There are #{list.count} cards with id: #{regex[1]}. Don't know what to do ... aborting"
+      else
+        comment = card_regex[2]
+        card = Trello::Card.find(card_id[0].to_s)
+        card.add_comment comment
+        m.reply "Added \"#{comment}\" comment to \"#{card.name}\" card"
+      end
       when /^card \d+ move to \w+/
       m.reply "Moving card ... "
       regex = searchfor.match(/^card (\d+) move to (\w+)/)
-      card = Trello::Card.find(given_short_id_return_long_id(regex[1].to_s))
-      list = Trello::List.find(regex[2].to_s)
-      card.list = list
-      m.reply "Moved card \"#{card.name}\" to list \"#{list.name}\"."
+      list = get_list_by_name(regex[2].to_s)
+      card_id = given_short_id_return_long_id(regex[1].to_s)
+      if card_id.count == 0
+        m.reply "Couldn't be found any card with id: #{regex[1]}. Aborting"
+      elsif card_id.count > 1
+        m.reply "There are #{list.count} cards with id: #{regex[1]}. Don't know what to do ... aborting"
+      else
+        if list.count == 0
+          m.reply "Couldn't be found any list named: \"#{regex[2].to_s}\"."
+        elsif list.count > 1
+          m.reply "There are #{list.count} lists named: #{regex[2].to_s}. Don't know what to do ... aborting"
+        else
+          card = Trello::Card.find(card_id[0])
+          list = list[0]
+          if card.list.name.casecmp(list.name) == 0
+            m.reply "Card \"#{card.name}\" is already on list \"#{list.name}\"."
+          else
+            card.move_to_list list
+            m.reply "Moved card \"#{card.name}\" to list \"#{list.name}\"."
+          end
+        end
+      end
       when /^card \d+ add member \w+/
       m.reply "Adding member to card ... "
       regex = searchfor.match(/^card (\d+) add member (\w+)/)
-      card = Trello::Card.find(given_short_id_return_long_id(regex[1].to_s))
-      membs = card.members.collect {|m| m.username}
-      member = Trello::Member.find(regex[2])
-      if membs.include? regex[2]
-        m.reply "#{member.full_name} is already assigned to card \"#{card.name}\"."
+      card_id = given_short_id_return_long_id(regex[1].to_s)
+      if card_id.count == 0
+        m.reply "Couldn't be found any card with id: #{regex[1]}"
+      elsif card_id.count > 1
+        m.reply "There are #{list.count} cards with id: #{regex[1]}. Don't know what to do ... aborting"
       else
-        card.add_member(member)
-        m.reply "Added \"#{member.full_name}\" to card \"#{card.name}\"."
+        card = Trello::Card.find(card_id[0])
+        membs = card.members.collect {|m| m.username}
+        begin
+          member = Trello::Member.find(regex[2])
+        rescue
+          member = nil
+        end
+        if member.nil?
+          m.reply "User \"#{regex[2]}\" doesn't exist in Trello."
+        elsif membs.include? regex[2]
+          m.reply "#{member.full_name} is already assigned to card \"#{card.name}\"."
+        else
+          card.add_member(member)
+          m.reply "Added \"#{member.full_name}\" to card \"#{card.name}\"."
+        end
       end
       when /^card by user \w+/
       username = searchfor.match(/^card by user (\w+)/)[1]
@@ -196,6 +237,9 @@ bot = Cinch::Bot.new do
         end
       end
       inx = 1
+      if cards.count == 0
+        m.reply "User \"#{username}\" has no cards assigned."
+      end
       cards.each do |c|
         m.reply "  ->  #{inx.to_s}. #{c.name} (id: #{short_id(c)}) from list: #{c.list.name}"
         inx += 1
@@ -232,7 +276,7 @@ bot = Cinch::Bot.new do
       end
       when /lists/
         $board.lists.each { |l|
-          m.reply "  ->  #{l.name} (id: #{l.id})"
+          m.reply "  ->  #{l.name}"
         }
       when /help/
       when /\?/
@@ -241,35 +285,35 @@ bot = Cinch::Bot.new do
         sync_board
         m.reply "Ok, synced the board, #{m.user.nick}."
       else
-    if searchfor.length > 0
-      # trellobot presumes you know what you are doing and will attempt
-      # to retrieve cards using the text you put in the message to him
-      # at least the comparison is not case sensitive
-      list = $board.lists.detect { |l| l.name.casecmp(searchfor) == 0 }
-      if list.nil?
-    m.reply "There's no list called <#{searchfor}> on the board, #{m.user.nick}. Sorry."
-      else
-    cards = list.cards
-    if cards.count == 0
-      m.reply "Nothing doing on that list today, #{m.user.nick}."
-    else
-      ess = (cards.count == 1) ? "" : "s"
-      m.reply "I have #{cards.count} card#{ess} today"
-      inx = 1
-      cards.each do |c|
-        membs = c.members.collect {|m| m.full_name }
-        if membs.count == 0
-          m.reply "  ->  #{inx.to_s}. #{c.name} (id: #{short_id(c)})"
+      if searchfor.length > 0
+        # trellobot presumes you know what you are doing and will attempt
+        # to retrieve cards using the text you put in the message to him
+        # at least the comparison is not case sensitive
+        list = $board.lists.detect { |l| l.name.casecmp(searchfor) == 0 }
+        if list.nil?
+          m.reply "There's no list called <#{searchfor}> on the board, #{m.user.nick}. Sorry."
         else
-          m.reply "  ->  #{inx.to_s}. #{c.name} (id: #{short_id(c)}) (members: #{membs.to_s.gsub!("[","").gsub!("]","").gsub!("\"","")})"; inx += 1
+          cards = list.cards
+          if cards.count == 0
+            m.reply "Nothing doing on that list today, #{m.user.nick}."
+          else
+            ess = (cards.count == 1) ? "" : "s"
+            m.reply "I have #{cards.count} card#{ess} today"
+            inx = 1
+            cards.each do |c|
+              membs = c.members.collect {|m| m.full_name }
+              if membs.count == 0
+                m.reply "  ->  #{inx.to_s}. #{c.name} (id: #{short_id(c)})"
+              else
+                m.reply "  ->  #{inx.to_s}. #{c.name} (id: #{short_id(c)}) (members: #{membs.to_s.gsub!("[","").gsub!("]","").gsub!("\"","")})"; inx += 1
+              end
+              inx += 1
+            end
+          end
         end
-        inx += 1
+      else
+        say_help(m)
       end
-    end
-      end
-    else
-      say_help(m)
-    end
     end
   end
 
