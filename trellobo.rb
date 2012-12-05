@@ -1,6 +1,7 @@
 require 'cinch'
 require 'trello'
 require 'json'
+require 'resolv'
 
 # You will need an access token to use ruby-trello 0.3.0 or higher, which trellobo depends on. To
 # get it, you'll need to go to this URL:
@@ -78,9 +79,23 @@ def given_short_id_return_long_id(short_id)
     return long_ids.first
   else
     raise RuntimeError "Several long ids found for #{short_id}"
+def validate_mail(email)
+  unless email.blank?
+    unless email =~ /^[a-zA-Z][\w\.-]*[a-zA-Z0-9]@[a-zA-Z0-9][\w\.-]*[a-zA-Z0-9]\.[a-zA-Z][a-zA-Z\.]*[a-zA-Z]$/
+      raise "Your email address does not appear to be valid"
+    else
+      raise "Your email domain name appears to be incorrect" unless validate_email_domain(email)
+    end
   end
 end
 
+def validate_email_domain(email)
+  domain = email.match(/\@(.+)/)[1]
+  Resolv::DNS.open do |dns|
+    @mx = dns.getresources(domain, Resolv::DNS::Resource::IN::MX)
+  end
+  @mx.size > 0 ? true : false
+end
 def sync_board
   return $board.refresh! if $board
   $board = Trello::Board.find(ENV['TRELLO_BOARD_ID'])
