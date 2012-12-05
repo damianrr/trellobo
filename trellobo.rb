@@ -168,9 +168,9 @@ bot = Cinch::Bot.new do
       card_regex = searchfor.match(/^card (\d+) comment (.+)/)
       card_id = given_short_id_return_long_id(card_regex[1])
       if card_id.count == 0
-        m.reply "Couldn't be found any card with id: #{card_regex[1]}"
+        m.reply "Couldn't be found any card with id: #{card_regex[1]}. Aborting"
       elsif card_id.count > 1
-        m.reply "There are #{list.count} cards with id: #{regex[1]}. Don't know what to do ... aborting"
+        m.reply "There are #{list.count} cards with id: #{regex[1]}. Don't know what to do. Aborting"
       else
         comment = card_regex[2]
         card = Trello::Card.find(card_id[0].to_s)
@@ -185,12 +185,12 @@ bot = Cinch::Bot.new do
       if card_id.count == 0
         m.reply "Couldn't be found any card with id: #{regex[1]}. Aborting"
       elsif card_id.count > 1
-        m.reply "There are #{list.count} cards with id: #{regex[1]}. Don't know what to do ... aborting"
+        m.reply "There are #{list.count} cards with id: #{regex[1]}. Don't know what to do. Aborting"
       else
         if list.count == 0
-          m.reply "Couldn't be found any list named: \"#{regex[2].to_s}\"."
+          m.reply "Couldn't be found any list named: \"#{regex[2].to_s}\". Aborting"
         elsif list.count > 1
-          m.reply "There are #{list.count} lists named: #{regex[2].to_s}. Don't know what to do ... aborting"
+          m.reply "There are #{list.count} lists named: #{regex[2].to_s}. Don't know what to do. Aborting"
         else
           card = Trello::Card.find(card_id[0])
           list = list[0]
@@ -207,9 +207,9 @@ bot = Cinch::Bot.new do
       regex = searchfor.match(/^card (\d+) add member (\w+)/)
       card_id = given_short_id_return_long_id(regex[1].to_s)
       if card_id.count == 0
-        m.reply "Couldn't be found any card with id: #{regex[1]}"
+        m.reply "Couldn't be found any card with id: #{regex[1]}. Aborting"
       elsif card_id.count > 1
-        m.reply "There are #{list.count} cards with id: #{regex[1]}. Don't know what to do ... aborting"
+        m.reply "There are #{list.count} cards with id: #{regex[1]}. Don't know what to do. Aborting"
       else
         card = Trello::Card.find(card_id[0])
         membs = card.members.collect {|m| m.username}
@@ -249,9 +249,9 @@ bot = Cinch::Bot.new do
       regex = searchfor.match(/^card (\d+) view (.+)/)
       card_id = given_short_id_return_long_id(regex[1].to_s)
       if card_id.count == 0
-        m.reply "Couldn't be found any card with id: #{regex[1]}"
+        m.reply "Couldn't be found any card with id: #{regex[1]}. Aborting"
       elsif card_id.count > 1
-        m.reply "There are #{list.count} cards with id: #{regex[1]}. Don't know what to do ... aborting"
+        m.reply "There are #{list.count} cards with id: #{regex[1]}. Don't know what to do. Aborting"
       else
         card = Trello::Card.find(card_id[0])
         msg_err = nil
