@@ -1,1 +1,53 @@
-<p> this is the card you selected: <%= @name %> </p>
+<html>
+<head>
+<title>Trellobot Card: <%= @card.name %></title>
+</head>
+<span>Name:</span> <span> <%= @card.name %> </span><br />
+<span>Description:</span> <span> <%= @card.description %> </span><br />
+<span>Due to:</span> <span> <%= @card.due.to_s %> </span><br />
+<span>Is closed?:</span> <span> <% if @card.closed == false %> No. <% else %> Yes. <% end %> </span><br />
+
+Members:
+<ul>
+<% @card.members.each do |m| %>
+<li><a href=<%= m.url %>> <%= m.full_name %> </a> </li>
+<% end %>
+</ul>
+Labels:
+<ul>
+<% @card.labels.each do |l| %>
+<li><span class=<%= l.color %>> <% if l.name == "" %><%= l.color %> <% else %> <%= l.name + "(" l.color + ")" %> <% end %></span> </li>
+<% end %>
+</ul>
+<br />
+Checklists:
+<ul>
+<% @card.checklists.each do |c| %>
+<li> <%= c.name %>
+  <%
+     c.check_items.each do |ci|
+     ch = @checkedlist.collect {|ccc| ccc if ccc[:id] == ci[:id]}.delete_if {|n| n.nil?}
+     status = ch.max_by {|a| a[:date] }
+     if !status.nil?
+        status = status[:status]
+     end
+  %>
+  <%= ch %>
+  <label>status: <%= status %>, status class: <%= status.class %></label>
+  <label><%= ci["name"] %></label><input type="checkbox" name=<%= ci["name"] %> value=<%= ci["name"]%> disabled="disabled" <% if status == "completed" %> checked="checked" <% end %> />
+  <% end %>
+</li>
+<% end %>
+</ul>
+<br />
+Comments:
+<ul>
+<% @comments.each do |cmmnt| %>
+<li>
+<strong><a href=<%= cmmnt.member_creator.url %>> <%= cmmnt.member_creator.full_name %> </a></strong> said: <br />
+<%= cmmnt.data["text"] %>
+at: <%= cmmnt.date %>
+</li>
+<% end %>
+</ul>
+</html>
