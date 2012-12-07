@@ -20,7 +20,7 @@ ActionMailer::Base.view_paths= File.dirname(__FILE__)
 class CardMailer < ActionMailer::Base
   def send_card(to, card)
     @card = card
-    @checkedlist = card.actions.collect {|a| {:id => a.attributes[:id], :status => a.data["checkItem"]["state"]} if a.type == "updateCheckItemStateOnCard"}.delete_if {|t| t.nil?}
+    @checkedlist = card.actions.collect {|a| {:id => a.data["checkItem"]["id"], :status => a.data["checkItem"]["state"]} if a.type == "updateCheckItemStateOnCard"}.delete_if {|t| t.nil?}
     @comments = card.actions.collect {|a| a if a.type == "commentCard"}.delete_if {|b| b.nil?}
     mail(:to => to.to_s, :from => "trellobot@speedyrails.com", :subject => "Trellobot Card: \"#{@card.name}\"") do |format|
       format.html
