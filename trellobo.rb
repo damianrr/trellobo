@@ -47,11 +47,11 @@ require_relative './mailer.rb'
 # DONE [dmn]:
 # Improved support for ssl and custom ports
 # Improved support for channels with passwords
-# trello: card adding feature x
+# trello: card add feature x
 # trello: card <id> comment this is a comment on card <id>
 # trello: card <id> move to Doing
 # trello: card <id> add member joe
-# trello: card <id> by user david (devuelve todas las cards a las que un usario esta asignado)
+# trello: cards assigned to david (devuelve todas las cards a las que un usario esta asignado)
 # trello: card <id> view joe@email.com (muestra todo el contenido de un card mediante el envio un correo formateado)
 
 # TODO [dmn]:
@@ -68,10 +68,6 @@ include Trello::Authorization
 Trello::Authorization.const_set :AuthPolicy, OAuthPolicy
 OAuthPolicy.consumer_credential = OAuthCredential.new ENV['TRELLO_API_KEY'], ENV['TRELLO_API_SECRET']
 OAuthPolicy.token = OAuthCredential.new ENV['TRELLO_API_ACCESS_TOKEN_KEY'], nil
-
-def short_id(card)
-  card.url.match(/\/(\d+)$/)[1]
-end
 
 def given_short_id_return_long_id(short_id)
   long_ids = $board.cards.collect { |c| c.id if c.url.match(/\/(\d+)$/)[1] == short_id.to_s}
@@ -161,7 +157,7 @@ bot = Cinch::Bot.new do
         m.reply "Creating card ... "
         name = searchfor.strip.match(/^card add (.+)$/)[1]
         card = Trello::Card.create(:name => name, :list_id => $add_cards_list.id)
-        m.reply "Created card #{card.name} with id: #{short_id(card)}."
+        m.reply "Created card #{card.name} with id: #{card.short_id}."
       end
       when /^card \d+ comment/
       m.reply "Commenting on card ... "
@@ -227,7 +223,7 @@ bot = Cinch::Bot.new do
           m.reply "Added \"#{member.full_name}\" to card \"#{card.name}\"."
         end
       end
-      when /^card by user \w+/
+      when /^cards assigned to \w+/
       username = searchfor.match(/^card by user (\w+)/)[1]
       cards = []
       $board.cards.each do |card|
@@ -241,7 +237,7 @@ bot = Cinch::Bot.new do
         m.reply "User \"#{username}\" has no cards assigned."
       end
       cards.each do |c|
-        m.reply "  ->  #{inx.to_s}. #{c.name} (id: #{short_id(c)}) from list: #{c.list.name}"
+        m.reply "  ->  #{inx.to_s}. #{c.name} (id: #{c.short_id}) from list: #{c.list.name}"
         inx += 1
       end
       when /^card \d+ view (.+)/
@@ -303,9 +299,9 @@ bot = Cinch::Bot.new do
             cards.each do |c|
               membs = c.members.collect {|m| m.full_name }
               if membs.count == 0
-                m.reply "  ->  #{inx.to_s}. #{c.name} (id: #{short_id(c)})"
+                m.reply "  ->  #{inx.to_s}. #{c.name} (id: #{c.short_id})"
               else
-                m.reply "  ->  #{inx.to_s}. #{c.name} (id: #{short_id(c)}) (members: #{membs.to_s.gsub!("[","").gsub!("]","").gsub!("\"","")})"; inx += 1
+                m.reply "  ->  #{inx.to_s}. #{c.name} (id: #{c.short_id}) (members: #{membs.to_s.gsub!("[","").gsub!("]","").gsub!("\"","")})"; inx += 1
               end
               inx += 1
             end
