@@ -34,29 +34,8 @@ require_relative './mailer.rb'
 # TRELLO_MAIL_PASSWORD : password for the username in the mail server used to send the cards
 # TRELLO_MAIL_ENABLE_STARTTLS_AUTO : set tu true if the mail server uses tls, false otherwise
 
-
-# name of that list. If not setted up, it will default to "To Do", and if a list with that name doesn't exist
-# there will be features that will not work (Card's related ones). Optional
-
-
-
-# DONE [moya]:
-# Added support for ssl and custom ports
-# Added support for channels with passwords
-# Fixed bug on trello bot addressing
-# DONE [dmn]:
-# Improved support for ssl and custom ports
-# Improved support for channels with passwords
-# trello: card add feature x
-# trello: card <id> comment this is a comment on card <id>
-# trello: card <id> move to Doing
-# trello: card <id> add member joe
-# trello: cards assigned to david (devuelve todas las cards a las que un usario esta asignado)
-# trello: card <id> view joe@email.com (muestra todo el contenido de un card mediante el envio un correo formateado)
-
 # TODO [dmn]:
 # Crear un template html con la informacion importante del card
-# Parametrizar la configuracion del envio de correos
 
 
 $board = nil
@@ -275,8 +254,9 @@ bot = Cinch::Bot.new do
           m.reply "  ->  #{l.name}"
         }
       when /help/
+      say_help(m)
       when /\?/
-        say_help(m)
+      say_help(m)
       when /sync/
         sync_board
         m.reply "Ok, synced the board, #{m.user.nick}."
@@ -294,7 +274,7 @@ bot = Cinch::Bot.new do
             m.reply "Nothing doing on that list today, #{m.user.nick}."
           else
             ess = (cards.count == 1) ? "" : "s"
-            m.reply "I have #{cards.count} card#{ess} today"
+            m.reply "I have #{cards.count} card#{ess} today in #{list.name}"
             inx = 1
             cards.each do |c|
               membs = c.members.collect {|m| m.full_name }
