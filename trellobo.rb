@@ -89,7 +89,7 @@ def say_help(msg)
   msg.reply "  -> 2. sync - resyncs my cache with the board."
   msg.reply "  -> 3. lists - show me all the board list names"
   msg.reply "  -> 4. card add this is a card - creates a new card named: \'this is a card\' in a list defined in the TRELLO_ADD_CARDS_LIST env variable or if it\'s not present in a list named To Do"
-  msg.reply "  -> 5. card <id> comment this is a comment on card <id> - Creates a comment on the card with short id equal to <id>"
+  msg.reply "  -> 5. card <id> comment this is a comment on card <id> - creates a comment on the card with short id equal to <id>"
   msg.reply "  -> 6. card <id> move to Doing - moves the card with short id equal to <id> to the list Doing"
   msg.reply "  -> 7. card <id> add member joe - assign joe to the card with short id equal to <id>."
   msg.reply "  -> 8. cards assigned to joe - return all cards assigned to joe"
@@ -280,7 +280,7 @@ bot = Cinch::Bot.new do
             m.reply "Nothing doing on that list today, #{m.user.nick}."
           else
             ess = (cards.count == 1) ? "" : "s"
-            m.reply "I have #{cards.count} card#{ess} today in #{list.name}"
+            m.reply "I have #{cards.count} card#{ess} today in list #{list.name}"
             inx = 1
             cards.each do |c|
               membs = c.members.collect {|m| m.full_name }
