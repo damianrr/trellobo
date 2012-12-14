@@ -12,7 +12,7 @@ require_relative './mailer.rb'
 # Substitute the DEVELOPER_PUBLIC_KEY with the value you'll supply in TRELLO_API_KEY below. At the end of this process,
 # You'll be told to give some key to the app, this is what you want to put in the TRELLO_API_ACCESS_TOKEN_KEY below.
 #
-# there are 5 environment variables that must be set for the trellobot to behave
+# there are several environment variables that must (could in some cases) be set for the trellobot to behave
 # the way he is supposed to -
 #
 # TRELLO_API_KEY : your Trello API developer key
@@ -33,10 +33,6 @@ require_relative './mailer.rb'
 # TRELLO_MAIL_USERNAME : username in the mail server used to send the cards
 # TRELLO_MAIL_PASSWORD : password for the username in the mail server used to send the cards
 # TRELLO_MAIL_ENABLE_STARTTLS_AUTO : set tu true if the mail server uses tls, false otherwise
-
-# TODO [dmn]:
-# Crear un template html con la informacion importante del card
-
 
 $board = nil
 $add_cards_list = nil
@@ -92,7 +88,7 @@ def say_help(msg)
   msg.reply "  -> 5. card <id> comment this is a comment on card <id> - creates a comment on the card with short id equal to <id>"
   msg.reply "  -> 6. card <id> move to Doing - moves the card with short id equal to <id> to the list Doing"
   msg.reply "  -> 7. card <id> add member joe - assign joe to the card with short id equal to <id>."
-  msg.reply "  -> 8. cards assigned to joe - return all cards assigned to joe"
+  msg.reply "  -> 8. cards joe - return all cards assigned to joe"
   msg.reply "  -> 9. card <id> view joe@email.com - sends an email to joe@email.com with the content of the card with short id equal to <id>"
 end
 
@@ -137,26 +133,26 @@ bot = Cinch::Bot.new do
       debugger
       when /^card add/
       if $add_cards_list.nil?
-        m.reply "Can't add card. It wasn't found any list named: #{ENV['TRELLO_ADD_CARDS_LIST']}."
+    m.reply "Can't add card. It wasn't found any list named: #{ENV['TRELLO_ADD_CARDS_LIST']}."
       else
-        m.reply "Creating card ... "
-        name = searchfor.strip.match(/^card add (.+)$/)[1]
-        card = Trello::Card.create(:name => name, :list_id => $add_cards_list.id)
-        m.reply "Created card #{card.name} with id: #{card.short_id}."
+    m.reply "Creating card ... "
+    name = searchfor.strip.match(/^card add (.+)$/)[1]
+    card = Trello::Card.create(:name => name, :list_id => $add_cards_list.id)
+    m.reply "Created card #{card.name} with id: #{card.short_id}."
       end
       when /^card \d+ comment/
       m.reply "Commenting on card ... "
       card_regex = searchfor.match(/^card (\d+) comment (.+)/)
       card_id = given_short_id_return_long_id(card_regex[1])
       if card_id.count == 0
-        m.reply "Couldn't be found any card with id: #{card_regex[1]}. Aborting"
+    m.reply "Couldn't be found any card with id: #{card_regex[1]}. Aborting"
       elsif card_id.count > 1
-        m.reply "There are #{list.count} cards with id: #{regex[1]}. Don't know what to do. Aborting"
+    m.reply "There are #{list.count} cards with id: #{regex[1]}. Don't know what to do. Aborting"
       else
-        comment = card_regex[2]
-        card = Trello::Card.find(card_id[0].to_s)
-        card.add_comment comment
-        m.reply "Added \"#{comment}\" comment to \"#{card.name}\" card"
+    comment = card_regex[2]
+    card = Trello::Card.find(card_id[0].to_s)
+    card.add_comment comment
+    m.reply "Added \"#{comment}\" comment to \"#{card.name}\" card"
       end
       when /^card \d+ move to \w+/
       m.reply "Moving card ... "
@@ -164,137 +160,137 @@ bot = Cinch::Bot.new do
       list = get_list_by_name(regex[2].to_s)
       card_id = given_short_id_return_long_id(regex[1].to_s)
       if card_id.count == 0
-        m.reply "Couldn't be found any card with id: #{regex[1]}. Aborting"
+    m.reply "Couldn't be found any card with id: #{regex[1]}. Aborting"
       elsif card_id.count > 1
-        m.reply "There are #{list.count} cards with id: #{regex[1]}. Don't know what to do. Aborting"
+    m.reply "There are #{list.count} cards with id: #{regex[1]}. Don't know what to do. Aborting"
       else
-        if list.count == 0
-          m.reply "Couldn't be found any list named: \"#{regex[2].to_s}\". Aborting"
-        elsif list.count > 1
-          m.reply "There are #{list.count} lists named: #{regex[2].to_s}. Don't know what to do. Aborting"
-        else
-          card = Trello::Card.find(card_id[0])
-          list = list[0]
-          if card.list.name.casecmp(list.name) == 0
-            m.reply "Card \"#{card.name}\" is already on list \"#{list.name}\"."
-          else
-            card.move_to_list list
-            m.reply "Moved card \"#{card.name}\" to list \"#{list.name}\"."
-          end
-        end
+    if list.count == 0
+      m.reply "Couldn't be found any list named: \"#{regex[2].to_s}\". Aborting"
+    elsif list.count > 1
+      m.reply "There are #{list.count} lists named: #{regex[2].to_s}. Don't know what to do. Aborting"
+    else
+      card = Trello::Card.find(card_id[0])
+      list = list[0]
+      if card.list.name.casecmp(list.name) == 0
+    m.reply "Card \"#{card.name}\" is already on list \"#{list.name}\"."
+      else
+    card.move_to_list list
+    m.reply "Moved card \"#{card.name}\" to list \"#{list.name}\"."
+      end
+    end
       end
       when /^card \d+ add member \w+/
       m.reply "Adding member to card ... "
       regex = searchfor.match(/^card (\d+) add member (\w+)/)
       card_id = given_short_id_return_long_id(regex[1].to_s)
       if card_id.count == 0
-        m.reply "Couldn't be found any card with id: #{regex[1]}. Aborting"
+    m.reply "Couldn't be found any card with id: #{regex[1]}. Aborting"
       elsif card_id.count > 1
-        m.reply "There are #{list.count} cards with id: #{regex[1]}. Don't know what to do. Aborting"
+    m.reply "There are #{list.count} cards with id: #{regex[1]}. Don't know what to do. Aborting"
       else
-        card = Trello::Card.find(card_id[0])
-        membs = card.members.collect {|m| m.username}
-        begin
-          member = Trello::Member.find(regex[2])
-        rescue
-          member = nil
-        end
-        if member.nil?
-          m.reply "User \"#{regex[2]}\" doesn't exist in Trello."
-        elsif membs.include? regex[2]
-          m.reply "#{member.full_name} is already assigned to card \"#{card.name}\"."
-        else
-          card.add_member(member)
-          m.reply "Added \"#{member.full_name}\" to card \"#{card.name}\"."
-        end
+    card = Trello::Card.find(card_id[0])
+    membs = card.members.collect {|m| m.username}
+    begin
+      member = Trello::Member.find(regex[2])
+    rescue
+      member = nil
+    end
+    if member.nil?
+      m.reply "User \"#{regex[2]}\" doesn't exist in Trello."
+    elsif membs.include? regex[2]
+      m.reply "#{member.full_name} is already assigned to card \"#{card.name}\"."
+    else
+      card.add_member(member)
+      m.reply "Added \"#{member.full_name}\" to card \"#{card.name}\"."
+    end
       end
-      when /^cards assigned to \w+/
-      username = searchfor.match(/^card by user (\w+)/)[1]
+      when /^cards \w+/
+      username = searchfor.match(/^cards (\w+)/)[1]
       cards = []
       $board.cards.each do |card|
-        members = card.members.collect { |mem| mem.username }
-        if members.include? username
-          cards << card
-        end
+    members = card.members.collect { |mem| mem.username }
+    if members.include? username
+      cards << card
+    end
       end
       inx = 1
       if cards.count == 0
-        m.reply "User \"#{username}\" has no cards assigned."
+    m.reply "User \"#{username}\" has no cards assigned."
       end
       cards.each do |c|
-        m.reply "  ->  #{inx.to_s}. #{c.name} (id: #{c.short_id}) from list: #{c.list.name}"
-        inx += 1
+    m.reply "  ->  #{inx.to_s}. #{c.name} (id: #{c.short_id}) from list: #{c.list.name}"
+    inx += 1
       end
       when /^card \d+ view (.+)/
       m.reply "Sending mail with card content ... "
       regex = searchfor.match(/^card (\d+) view (.+)/)
       card_id = given_short_id_return_long_id(regex[1].to_s)
       if card_id.count == 0
-        m.reply "Couldn't be found any card with id: #{regex[1]}. Aborting"
+    m.reply "Couldn't be found any card with id: #{regex[1]}. Aborting"
       elsif card_id.count > 1
-        m.reply "There are #{list.count} cards with id: #{regex[1]}. Don't know what to do. Aborting"
+    m.reply "There are #{list.count} cards with id: #{regex[1]}. Don't know what to do. Aborting"
       else
-        card = Trello::Card.find(card_id[0])
-        msg_err = nil
-        begin
-          validate_mail(regex[2])
-        rescue => e
-          msg_err = e.message
-        end
-        if msg_err.nil?
-          begin
-            email = CardMailer.send_card(regex[2], card)
-            email.deliver
-          rescue => e
-            m.reply e.message
-            m.reply "An error ocurred sending the mail. Sorry for the inconvenience."
-            break
-          end
-          m.reply "Mailed the card \"#{card.name}\" to #{regex[2]}"
-        else
-          m.reply msg_err
-        end
+    card = Trello::Card.find(card_id[0])
+    msg_err = nil
+    begin
+      validate_mail(regex[2])
+    rescue => e
+      msg_err = e.message
+    end
+    if msg_err.nil?
+      begin
+    email = CardMailer.send_card(regex[2], card)
+    email.deliver
+      rescue => e
+    m.reply e.message
+    m.reply "An error ocurred sending the mail. Sorry for the inconvenience."
+    break
+      end
+      m.reply "Mailed the card \"#{card.name}\" to #{regex[2]}"
+    else
+      m.reply msg_err
+    end
       end
       when /lists/
-        $board.lists.each { |l|
-          m.reply "  ->  #{l.name}"
-        }
+    $board.lists.each { |l|
+      m.reply "  ->  #{l.name}"
+    }
       when /help/
       say_help(m)
       when /\?/
       say_help(m)
       when /sync/
-        sync_board
-        m.reply "Ok, synced the board, #{m.user.nick}."
+    sync_board
+    m.reply "Ok, synced the board, #{m.user.nick}."
       else
       if searchfor.length > 0
-        # trellobot presumes you know what you are doing and will attempt
-        # to retrieve cards using the text you put in the message to him
-        # at least the comparison is not case sensitive
-        list = $board.lists.detect { |l| l.name.casecmp(searchfor) == 0 }
-        if list.nil?
-          m.reply "There's no list called <#{searchfor}> on the board, #{m.user.nick}. Sorry."
-        else
-          cards = list.cards
-          if cards.count == 0
-            m.reply "Nothing doing on that list today, #{m.user.nick}."
-          else
-            ess = (cards.count == 1) ? "" : "s"
-            m.reply "I have #{cards.count} card#{ess} today in list #{list.name}"
-            inx = 1
-            cards.each do |c|
-              membs = c.members.collect {|m| m.full_name }
-              if membs.count == 0
-                m.reply "  ->  #{inx.to_s}. #{c.name} (id: #{c.short_id})"
-              else
-                m.reply "  ->  #{inx.to_s}. #{c.name} (id: #{c.short_id}) (members: #{membs.to_s.gsub!("[","").gsub!("]","").gsub!("\"","")})"; inx += 1
-              end
-              inx += 1
-            end
-          end
-        end
+    # trellobot presumes you know what you are doing and will attempt
+    # to retrieve cards using the text you put in the message to him
+    # at least the comparison is not case sensitive
+    list = $board.lists.detect { |l| l.name.casecmp(searchfor) == 0 }
+    if list.nil?
+      m.reply "There's no list called <#{searchfor}> on the board, #{m.user.nick}. Sorry."
+    else
+      cards = list.cards
+      if cards.count == 0
+    m.reply "Nothing doing on that list today, #{m.user.nick}."
       else
-        say_help(m)
+    ess = (cards.count == 1) ? "" : "s"
+    m.reply "I have #{cards.count} card#{ess} today in list #{list.name}"
+    inx = 1
+    cards.each do |c|
+      membs = c.members.collect {|m| m.full_name }
+      if membs.count == 0
+    m.reply "  ->  #{inx.to_s}. #{c.name} (id: #{c.short_id})"
+      else
+    m.reply "  ->  #{inx.to_s}. #{c.name} (id: #{c.short_id}) (members: #{membs.to_s.gsub!("[","").gsub!("]","").gsub!("\"","")})"; inx += 1
+      end
+      inx += 1
+    end
+      end
+    end
+      else
+    say_help(m)
       end
     end
   end
