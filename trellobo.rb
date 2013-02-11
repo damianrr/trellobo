@@ -204,6 +204,20 @@ bot = Cinch::Bot.new do
           m.reply "Added \"#{member.full_name}\" to card \"#{card.name}\"."
         end
       end
+
+    when /^card \d+ delete/
+      card_id = given_short_id_return_long_id(searchfor.match(/^card (\d+)/)[1])
+      if card_id.count == 0
+    m.reply "Couldn't be found any card with id: #{regex[1]}. Aborting"
+      elsif card_id.count > 1
+    m.reply "There are #{list.count} cards with id: #{regex[1]}. Don't know what to do. Aborting"
+      else
+    card = Trello::Card.find(card_id[0])
+    name = card.name
+    card.delete
+    m.reply "Card \"#{name} \" deleted."
+      end
+
     when /^cards \w+/
       username = searchfor.match(/^cards (\w+)/)[1]
       cards = []
